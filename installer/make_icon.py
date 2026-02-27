@@ -25,4 +25,4 @@ images[0].save(
     sizes=[(s, s) for s in SIZES],
     append_images=images[1:],
 )
-print(f"icon.ico written → {out}")
+print(f"icon.ico written to {out}")

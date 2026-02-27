@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-APP_VERSION    = "1.0.0"
+APP_VERSION    = "1.0.1"
 CHECK_INTERVAL = 5 * 60          # seconds between automatic refreshes
 ALERT_LEVELS   = [20, 10, 5]     # thresholds for toast notifications (desc order)
 BLE_SCAN_TIMEOUT  = 15.0         # seconds for BLE device discovery

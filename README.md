@@ -1,25 +1,47 @@
 # Logitech Battery Monitor
 
-A lightweight Windows system-tray application that shows your Logitech mouse battery level at all times — no Logitech app required.
+A lightweight Windows system-tray app that always shows your Logitech mouse battery level — no Logitech software required.
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-1.0.1-orange)
+
+---
+
+## Download & Install
+
+**No Python or technical knowledge required.**
+
+1. Go to the [**Releases**](../../releases/latest) page
+2. Download `LogitechBatteryMonitor-1.0.1-x64.msi`
+3. Double-click the file and follow the installer
+4. The app starts automatically and appears in your system tray (bottom-right corner of the taskbar)
+
+> **Can't see the icon?** Click the **`^`** arrow on the right side of your taskbar to reveal hidden icons. You can drag the battery icon out to keep it always visible.
 
 ---
 
 ## Features
 
-- **Live battery percentage** in the system tray icon with colour coding
+- **Live battery percentage** always visible in the system tray
+- **Colour-coded icon** so you can see the status at a glance:
   - 🟢 Green — above 30%
   - 🟡 Yellow — 20–30%
   - 🟠 Orange — 10–20%
   - 🔴 Red — 10% and below
-- **Hover tooltip** showing device name and exact percentage
-- **Toast notifications** at ≤20%, ≤10%, and ≤5% with escalating urgency
-- **No Logitech software dependency** — reads directly from the device via Bluetooth
-- **Automatic refresh** every 5 minutes (configurable)
-- **Start with Windows** toggle in the right-click menu
+- **Hover tooltip** — shows device name and exact percentage
+- **Pop-up alerts** when battery reaches 20%, 10%, and 5%
+- **No Logitech software needed** — reads the battery directly from the mouse over Bluetooth
+- Checks automatically every 5 minutes
+- Right-click the icon to refresh immediately or enable **Start with Windows**
+
+---
+
+## System Requirements
+
+- Windows 10 or Windows 11 (64-bit)
+- A Logitech mouse paired via Bluetooth
+- That's it — no Python, no drivers, no extra software
 
 ---
 
@@ -28,88 +50,39 @@ A lightweight Windows system-tray application that shows your Logitech mouse bat
 Tested with:
 - Logitech MX Anywhere 2
 
-Should work with any Logitech Bluetooth mouse that exposes the standard BLE Battery Service (UUID `0x180F`). More devices will be added based on user feedback.
-
----
-
-## Requirements
-
-- Windows 10 or 11
-- Python 3.10+
-- Logitech mouse paired via Bluetooth
-
----
-
-## Installation
-
-1. **Clone or download** this repository:
-   ```
-   git clone https://github.com/void143/logitech-battery-monitor.git
-   cd logitech-battery-monitor
-   ```
-
-2. **Install dependencies** — double-click `install.bat` or run:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. **Launch** — double-click `start.bat`
-
-The tray icon appears within a few seconds. The first battery reading takes up to 15 seconds while the app locates your device.
-
-> **Tip:** If the icon doesn't appear on the taskbar, check the notification area overflow (the `^` arrow on the right side of the taskbar).
-
----
-
-## Usage
-
-Right-click the tray icon for options:
-
-| Menu item | Action |
-|---|---|
-| Refresh Now | Read battery level immediately |
-| Rescan Device | Clear cached device address and scan again |
-| Start with Windows | Toggle autostart via the Windows registry |
-| Exit | Quit the application |
-
----
-
-## Configuration
-
-Edit the constants at the top of `monitor.py`:
-
-| Constant | Default | Description |
-|---|---|---|
-| `CHECK_INTERVAL` | `300` | Seconds between automatic refreshes |
-| `ALERT_LEVELS` | `[20, 10, 5]` | Battery % thresholds that trigger notifications |
-| `DEVICE_KEYWORDS` | `["MX Anywhere", "MX Master", "Logitech"]` | Names used to identify your device |
-
----
-
-## How It Works
-
-The app uses two methods to read battery level, tried in order:
-
-1. **BLE GATT Battery Service** (primary) — connects directly to the mouse over Bluetooth LE and reads the standard Battery Level characteristic (`0x2A19`). Works when the mouse is advertising as a BLE peripheral.
-
-2. **Windows Device Information API** (fallback) — queries the Windows device property store via PowerShell. Works when the mouse is connected via Bluetooth Classic or the Bolt USB receiver.
-
-Config and logs are stored in `%USERPROFILE%\.logitech_battery_monitor\`.
+Should work with any Logitech Bluetooth mouse. If your device isn't detected, open an issue and include the device name shown in Windows Bluetooth settings.
 
 ---
 
 ## Troubleshooting
 
-**Icon doesn't appear**
-- Check the taskbar overflow area (`^` arrow near the clock)
-- Make sure Python is on your PATH: `python --version` in a terminal
+**The icon doesn't appear after installing**
+- Look for the hidden icons arrow (`^`) near the clock on your taskbar
+- If still missing, right-click the taskbar → Task Manager → check if `LogitechBatteryMonitor.exe` is running under Background processes
 
-**Always shows Unknown**
-- Confirm your mouse is paired via Bluetooth (not just the USB receiver)
-- Try right-click → Rescan Device
+**Always shows "Unknown"**
+- Make sure your mouse is paired via Bluetooth (Settings → Bluetooth & devices)
+- Right-click the tray icon → **Rescan Device**
 
-**Battery jumps in large steps (e.g. 25%, 50%, 75%)**
-- This is normal — Logitech firmware reports in coarse increments
+**Battery jumps in big steps (e.g. 25% → 50%)**
+- This is normal — Logitech firmware reports in coarse steps
+
+---
+
+## For Developers
+
+If you want to run from source or contribute:
+
+1. Install Python 3.10+ from [python.org](https://www.python.org)
+2. Clone this repo and run `install.bat`
+3. Launch with `start.bat`
+
+To build the MSI yourself:
+```
+installer\build_msi.bat
+```
+
+See the `installer/` folder for the PyInstaller spec and WiX 4 package definition.
 
 ---
 
@@ -121,4 +94,4 @@ MIT — see [LICENSE](LICENSE)
 
 ## Contributing
 
-Pull requests welcome. If your Logitech device isn't detected, open an issue with the device name as shown in Windows Bluetooth settings.
+Pull requests are welcome. If your Logitech device isn't detected, please open an issue.
