@@ -22,6 +22,10 @@ build/
 dist/
 installer/icon.ico
 *.spec.bak
+*.wixpdb
+
+# WiX local extension cache
+.wix/
 
 # IDE
 .vscode/

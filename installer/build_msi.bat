@@ -59,13 +59,19 @@ if not exist "%DIST_DIR%\LogitechBatteryMonitor.exe" (
 )
 
 :: ---------------------------------------------------------------------------
-:: Step 4 — WiX 4: build MSI
+:: Step 4 — WiX: build MSI (run from installer dir so .wix extension cache is found)
 :: ---------------------------------------------------------------------------
 echo.
-echo [4/5] Building MSI (WiX 4)...
+echo [4/5] Building MSI (WiX)...
 set APP_VERSION=%APP_VERSION%
-wix build "%INSTALLER_DIR%\package.wxs" -o "%DIST_DIR%\%MSI_NAME%"
-if %errorlevel% neq 0 (echo ERROR: WiX build failed & exit /b 1)
+pushd "%INSTALLER_DIR%"
+wix extension list 2>nul | findstr "WixToolset.UI" >nul || (
+    echo Installing WiX UI extension...
+    wix extension add WixToolset.UI.wixext/6.0.2
+)
+wix build "package.wxs" -o "%DIST_DIR%\%MSI_NAME%" -ext WixToolset.UI.wixext
+if %errorlevel% neq 0 (popd & echo ERROR: WiX build failed & exit /b 1)
+popd
 
 :: ---------------------------------------------------------------------------
 :: Step 5 — Done

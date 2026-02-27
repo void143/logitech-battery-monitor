@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- WiX 4 source for Logitech Battery Monitor MSI -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
   <Package
     Name="Logitech Battery Monitor"
@@ -15,6 +16,9 @@
       DowngradeErrorMessage="A newer version of Logitech Battery Monitor is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
+
+    <!-- Add/Remove Programs properties -->
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/void143/logitech-battery-monitor" />
 
     <!-- Install directory: Program Files\LogitechBatteryMonitor -->
     <StandardDirectory Id="ProgramFiles64Folder">
@@ -53,7 +57,7 @@
                      KeyPath="yes" />
     </Component>
 
-    <!-- Launch app immediately after install -->
+    <!-- Launch app immediately after install (async, no wait) -->
     <CustomAction Id="LaunchApp"
                   Impersonate="yes"
                   Execute="immediate"
@@ -65,6 +69,10 @@
       <Custom Action="LaunchApp" After="InstallFinalize"
               Condition="NOT Installed AND NOT REMOVE" />
     </InstallExecuteSequence>
+
+    <!-- Progress UI with license dialog -->
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
 
     <!-- Feature -->
     <Feature Id="Main" Title="Logitech Battery Monitor" Level="1">

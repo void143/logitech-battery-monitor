@@ -22,8 +22,11 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt pyinstaller
 
-      - name: Install WiX 4
-        run: dotnet tool install --global wix
+      - name: Install WiX
+        run: |
+          dotnet tool install --global wix
+          cd installer
+          wix extension add WixToolset.UI.wixext/6.0.2
 
       - name: Read version
         id: version
@@ -40,7 +43,9 @@ jobs:
         run: pyinstaller installer/monitor.spec --distpath dist --workpath build --noconfirm
 
       - name: Build MSI (WiX)
-        run: wix build installer/package.wxs -o dist/${{ env.MSI_NAME }}
+        run: |
+          cd installer
+          wix build package.wxs -o ../dist/${{ env.MSI_NAME }} -ext WixToolset.UI.wixext
 
       - name: Upload MSI artifact
         uses: actions/upload-artifact@v4

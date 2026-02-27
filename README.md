@@ -4,7 +4,7 @@ A lightweight Windows system-tray app that always shows your Logitech mouse batt
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Version](https://img.shields.io/badge/version-1.0.1-orange)
+![Version](https://img.shields.io/badge/version-1.0.2-orange)
 
 ---
 
@@ -13,7 +13,7 @@ A lightweight Windows system-tray app that always shows your Logitech mouse batt
 **No Python or technical knowledge required.**
 
 1. Go to the [**Releases**](../../releases/latest) page
-2. Download `LogitechBatteryMonitor-1.0.1-x64.msi`
+2. Download `LogitechBatteryMonitor-1.0.2-x64.msi`
 3. Double-click the file and follow the installer
 4. The app starts automatically and appears in your system tray (bottom-right corner of the taskbar)
 
@@ -74,15 +74,25 @@ Should work with any Logitech Bluetooth mouse. If your device isn't detected, op
 If you want to run from source or contribute:
 
 1. Install Python 3.10+ from [python.org](https://www.python.org)
-2. Clone this repo and run `install.bat`
-3. Launch with `start.bat`
+2. Clone this repo:
+   ```
+   git clone https://github.com/void143/logitech-battery-monitor.git
+   ```
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+4. Run directly (no install needed):
+   ```
+   pythonw monitor.py
+   ```
 
-To build the MSI yourself:
+To build the MSI locally (requires .NET SDK):
 ```
-installer\build_msi.bat
+powershell -ExecutionPolicy Bypass -File installer\build_msi.ps1
 ```
 
-See the `installer/` folder for the PyInstaller spec and WiX 4 package definition.
+The output MSI lands in `dist\`.
 
 ---
 

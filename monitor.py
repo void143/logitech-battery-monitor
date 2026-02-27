@@ -5,6 +5,7 @@ Windows system-tray app — reads battery via BLE GATT or Windows Device API.
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import json
 import logging
 import os
@@ -22,7 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-APP_VERSION    = "1.0.1"
+APP_VERSION    = "1.0.2"
 CHECK_INTERVAL = 5 * 60          # seconds between automatic refreshes
 ALERT_LEVELS   = [20, 10, 5]     # thresholds for toast notifications (desc order)
 BLE_SCAN_TIMEOUT  = 15.0         # seconds for BLE device discovery
@@ -512,9 +513,31 @@ class MouseBatteryMonitor:
 
 
 # ---------------------------------------------------------------------------
+# Single-instance guard
+# ---------------------------------------------------------------------------
+_MUTEX_HANDLE = None   # keep reference so the handle stays open
+
+
+def _acquire_single_instance() -> bool:
+    """Create a named Windows mutex.  Returns False if another instance owns it."""
+    global _MUTEX_HANDLE
+    ERROR_ALREADY_EXISTS = 183
+    handle = ctypes.windll.kernel32.CreateMutexW(None, True, "LogitechBatteryMonitor_SingleInstance")
+    if ctypes.windll.kernel32.GetLastError() == ERROR_ALREADY_EXISTS:
+        if handle:
+            ctypes.windll.kernel32.CloseHandle(handle)
+        return False
+    _MUTEX_HANDLE = handle   # keep alive for the lifetime of the process
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    if not _acquire_single_instance():
+        # Another instance is already running — bail out silently.
+        sys.exit(0)
     log.info("Starting %s", APP_NAME)
     app = MouseBatteryMonitor()
     app.run()

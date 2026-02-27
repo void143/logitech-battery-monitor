@@ -20,10 +20,15 @@ New-Item -ItemType Directory -Force $distDir | Out-Null
 # Set env var for WiX preprocessor $(env.APP_VERSION)
 $env:APP_VERSION = $appVersion
 
-# Build
+# Build (run from installer dir so .wix extension cache is found)
 Push-Location $installerDir
 try {
-    & $wix build "package.wxs" -o $msiPath
+    $extList = & $wix extension list 2>$null
+    if (-not ($extList -match "WixToolset\.UI")) {
+        Write-Host "Installing WiX UI extension..."
+        & $wix extension add WixToolset.UI.wixext/6.0.2
+    }
+    & $wix build "package.wxs" -o $msiPath -ext WixToolset.UI.wixext
     if ($LASTEXITCODE -ne 0) { throw "WiX build failed (exit $LASTEXITCODE)" }
 } finally {
     Pop-Location
