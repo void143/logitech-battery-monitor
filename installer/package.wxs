@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WiX 4 source for Logitech Battery Monitor MSI.
+  Build with: wix build package.wxs -o LogitechBatteryMonitor.msi
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package
+    Name="Logitech Battery Monitor"
+    Manufacturer="Ivan Miskevich"
+    Version="$(env.APP_VERSION)"
+    UpgradeCode="{3E6A9D2F-8C4B-4E1A-B703-F25C8D3A4E67}"
+    Scope="perMachine"
+    InstallerVersion="500">
+
+    <!-- Silently replace older versions; block downgrade -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of Logitech Battery Monitor is already installed." />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Directory structure                                                  -->
+    <!-- ------------------------------------------------------------------ -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="LogitechBatteryMonitor" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppMenuFolder" Name="Logitech Battery Monitor" />
+    </StandardDirectory>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Main executable                                                      -->
+    <!-- ------------------------------------------------------------------ -->
+    <Component Id="MainExeComponent" Directory="INSTALLFOLDER"
+               Guid="{A1B2C3D4-E5F6-4890-AB12-CD34EF567001}">
+      <File Id="MainExe"
+            Source="..\dist\LogitechBatteryMonitor.exe"
+            Name="LogitechBatteryMonitor.exe"
+            KeyPath="yes" />
+    </Component>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Start Menu shortcut                                                  -->
+    <!-- ------------------------------------------------------------------ -->
+    <Component Id="ShortcutComponent" Directory="AppMenuFolder"
+               Guid="{B2C3D4E5-F6A7-4901-BC23-DE45F6789002}">
+      <Shortcut Id="StartMenuShortcut"
+                Name="Logitech Battery Monitor"
+                Description="Monitor your Logitech mouse battery level"
+                Target="[INSTALLFOLDER]LogitechBatteryMonitor.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveAppMenuFolder" Directory="AppMenuFolder" On="uninstall" />
+      <!-- Registry key used as KeyPath so WiX can track this component -->
+      <RegistryValue Root="HKCU"
+                     Key="Software\LogitechBatteryMonitor"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Launch app after install (optional — comment out to disable)        -->
+    <!-- ------------------------------------------------------------------ -->
+    <CustomAction Id="LaunchApp"
+                  Impersonate="yes"
+                  Execute="immediate"
+                  ExeCommand=""
+                  FileRef="MainExe"
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApp" After="InstallFinalize">
+        NOT Installed AND NOT REMOVE
+      </Custom>
+    </InstallExecuteSequence>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Feature                                                              -->
+    <!-- ------------------------------------------------------------------ -->
+    <Feature Id="Main" Title="Logitech Battery Monitor" Level="1">
+      <ComponentRef Id="MainExeComponent" />
+      <ComponentRef Id="ShortcutComponent" />
+    </Feature>
+
+  </Package>
+</Wix>

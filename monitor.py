@@ -22,6 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+APP_VERSION    = "1.0.0"
 CHECK_INTERVAL = 5 * 60          # seconds between automatic refreshes
 ALERT_LEVELS   = [20, 10, 5]     # thresholds for toast notifications (desc order)
 BLE_SCAN_TIMEOUT  = 15.0         # seconds for BLE device discovery
@@ -314,10 +315,14 @@ def _set_startup_entry(enable: bool) -> None:
         access=winreg.KEY_SET_VALUE,
     )
     if enable:
-        pythonw = Path(sys.executable).with_name("pythonw.exe")
-        script  = Path(__file__).resolve()
-        winreg.SetValueEx(key, REGISTRY_VALUE, 0, winreg.REG_SZ,
-                          f'"{pythonw}" "{script}"')
+        if getattr(sys, "frozen", False):
+            # Running as a PyInstaller-bundled exe
+            cmd = f'"{sys.executable}"'
+        else:
+            pythonw = Path(sys.executable).with_name("pythonw.exe")
+            script  = Path(__file__).resolve()
+            cmd = f'"{pythonw}" "{script}"'
+        winreg.SetValueEx(key, REGISTRY_VALUE, 0, winreg.REG_SZ, cmd)
         log.info("Added to startup registry.")
     else:
         try:

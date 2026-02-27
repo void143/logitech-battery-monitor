@@ -17,6 +17,12 @@ env/
 # App runtime data (logs, config — personal, not shared)
 .logitech_battery_monitor/
 
+# Build artifacts
+build/
+dist/
+installer/icon.ico
+*.spec.bak
+
 # IDE
 .vscode/
 .idea/
