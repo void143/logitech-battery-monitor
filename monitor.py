@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import ctypes
+import ctypes.wintypes
 import json
 import logging
 import os
@@ -23,7 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-APP_VERSION    = "1.0.2"
+APP_VERSION    = "1.0.3"
 CHECK_INTERVAL = 5 * 60          # seconds between automatic refreshes
 ALERT_LEVELS   = [20, 10, 5]     # thresholds for toast notifications (desc order)
 BLE_SCAN_TIMEOUT  = 15.0         # seconds for BLE device discovery
@@ -335,6 +336,93 @@ def _set_startup_entry(enable: bool) -> None:
 
 
 # ---------------------------------------------------------------------------
+# TaskbarCreated watcher — re-registers icon when Explorer restarts
+# ---------------------------------------------------------------------------
+_WNDPROCTYPE = ctypes.WINFUNCTYPE(
+    ctypes.c_long,
+    ctypes.wintypes.HWND,
+    ctypes.c_uint,
+    ctypes.wintypes.WPARAM,
+    ctypes.wintypes.LPARAM,
+)
+
+
+class _WNDCLASSW(ctypes.Structure):
+    _fields_ = [
+        ("style",         ctypes.c_uint),
+        ("lpfnWndProc",   _WNDPROCTYPE),
+        ("cbClsExtra",    ctypes.c_int),
+        ("cbWndExtra",    ctypes.c_int),
+        ("hInstance",     ctypes.wintypes.HINSTANCE),
+        ("hIcon",         ctypes.wintypes.HICON),
+        ("hCursor",       ctypes.wintypes.HANDLE),
+        ("hbrBackground", ctypes.wintypes.HBRUSH),
+        ("lpszMenuName",  ctypes.wintypes.LPCWSTR),
+        ("lpszClassName", ctypes.wintypes.LPCWSTR),
+    ]
+
+
+class _MSG(ctypes.Structure):
+    _fields_ = [
+        ("hwnd",    ctypes.wintypes.HWND),
+        ("message", ctypes.c_uint),
+        ("wParam",  ctypes.wintypes.WPARAM),
+        ("lParam",  ctypes.wintypes.LPARAM),
+        ("time",    ctypes.wintypes.DWORD),
+        ("pt",      ctypes.wintypes.POINT),
+    ]
+
+
+def _start_taskbar_watcher(get_icon) -> None:
+    """Spin up a hidden window that listens for TaskbarCreated.
+
+    Windows broadcasts this message when Explorer (re)starts — e.g. after a
+    crash, update, or sign-out/sign-in cycle.  pystray 0.19 does not handle
+    it automatically, so the icon disappears.  We re-register it here.
+    """
+    WM_TASKBARCREATED = ctypes.windll.user32.RegisterWindowMessageW("TaskbarCreated")
+    hinstance = ctypes.windll.kernel32.GetModuleHandleW(None)
+    CLASS_NAME = "LBMTaskbarWatcher"
+
+    def _wnd_proc(hwnd, msg, wparam, lparam):
+        if msg == WM_TASKBARCREATED:
+            log.info("TaskbarCreated received — re-registering tray icon.")
+            icon = get_icon()
+            if icon is not None:
+                try:
+                    icon.visible = False
+                    icon.visible = True
+                except Exception as exc:
+                    log.warning("Failed to re-show icon after Explorer restart: %s", exc)
+        return ctypes.windll.user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+
+    wnd_proc_cb = _WNDPROCTYPE(_wnd_proc)   # keep reference alive
+
+    def _thread():
+        wc = _WNDCLASSW()
+        wc.lpfnWndProc   = wnd_proc_cb
+        wc.hInstance     = hinstance
+        wc.lpszClassName = CLASS_NAME
+        if not ctypes.windll.user32.RegisterClassW(ctypes.byref(wc)):
+            log.warning("TaskbarWatcher: RegisterClassW failed (err=%d).",
+                        ctypes.windll.kernel32.GetLastError())
+            return
+        hwnd = ctypes.windll.user32.CreateWindowExW(
+            0, CLASS_NAME, CLASS_NAME,
+            0, 0, 0, 0, 0, None, None, hinstance, None,
+        )
+        if not hwnd:
+            log.warning("TaskbarWatcher: CreateWindowExW failed.")
+            return
+        msg_buf = _MSG()
+        while ctypes.windll.user32.GetMessageW(ctypes.byref(msg_buf), None, 0, 0) > 0:
+            ctypes.windll.user32.TranslateMessage(ctypes.byref(msg_buf))
+            ctypes.windll.user32.DispatchMessageW(ctypes.byref(msg_buf))
+
+    threading.Thread(target=_thread, daemon=True, name="TaskbarWatcher").start()
+
+
+# ---------------------------------------------------------------------------
 # Main application
 # ---------------------------------------------------------------------------
 class MouseBatteryMonitor:
@@ -509,6 +597,7 @@ class MouseBatteryMonitor:
             menu,
         )
         self._update_icon()
+        _start_taskbar_watcher(lambda: self.icon)
         self.icon.run()
 
 

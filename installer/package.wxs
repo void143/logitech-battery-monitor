@@ -57,6 +57,17 @@
                      KeyPath="yes" />
     </Component>
 
+    <!-- Autostart: run at Windows logon for the installing user -->
+    <Component Id="StartupComponent" Directory="INSTALLFOLDER"
+               Guid="{C3D4E5F6-A7B8-4012-CD34-EF5678901003}">
+      <RegistryValue Root="HKCU"
+                     Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                     Name="LogitechBatteryMonitor"
+                     Type="string"
+                     Value="[INSTALLFOLDER]LogitechBatteryMonitor.exe"
+                     KeyPath="yes" />
+    </Component>
+
     <!-- Launch app immediately after install (async, no wait) -->
     <CustomAction Id="LaunchApp"
                   Impersonate="yes"
@@ -78,6 +89,7 @@
     <Feature Id="Main" Title="Logitech Battery Monitor" Level="1">
       <ComponentRef Id="MainExeComponent" />
       <ComponentRef Id="ShortcutComponent" />
+      <ComponentRef Id="StartupComponent" />
     </Feature>
 
   </Package>
